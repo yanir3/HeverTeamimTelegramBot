@@ -10,6 +10,7 @@ HVR_LOGIN_PAGE = 'https://www.hvr.co.il/signin.aspx'
 HVR_HOME_PAGE = 'https://www.hvr.co.il/home_page.aspx?page=m_main&t=637003008000000000'
 HVR_TEAMIM_CONTROL_URL = 'https://www.hvr.co.il/gift_2000.aspx'
 HVR_WRONG_CREDIT_CARD_MSG = "<br/><br/><div align=\"center\" style=\"height:400px\"><table width=\"80%\" bgcolor=\"red\" cellspacing=\"0\" cellpadding=\"20\" bordercolor=\"black\" border=\"2\">"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
 
 
 class CardChargeException(Exception):
@@ -23,6 +24,7 @@ class HvrLoginException(Exception):
 class Hvr():
         def __init__(self, user_config):
                 self.session = requests.session()
+                self.session.headers['User-Agent'] = USER_AGENT
                 self.username = user_config['username']
                 self.password = user_config['password']
                 self.credit_card_number = user_config['credit_card_number']
@@ -41,7 +43,6 @@ class Hvr():
                         'vv': str(random.random())
                 }
                 balance_response = self.session.post(HVR_TEAMIM_CONTROL_URL, params={'food': 1}, data=payload)
-
                 # parse the the output
                 balance_string = str(balance_response.content)[2:-1] if str(balance_response.content).startswith("b'",0,2) else str(balance_response.content)
                 balance = balance_string.split('|')
@@ -87,6 +88,7 @@ class Hvr():
                 if response.url.find('signin.aspx') != -1:
                         # session disconnected
                         self.session = requests.session()
+                        self.session.headers['User-Agent'] = USER_AGENT
                         return False
                 return True
 
@@ -100,7 +102,7 @@ class Hvr():
                 login_page_response = self.session.get(HVR_LOGIN_PAGE)
                 try:
                         if self.session.cookies.get('bn') == None:
-                                print('could not retrive sesssion id, aborting...')
+                                print('could not retrive session id, aborting...')
                         cn = re.findall('<input type="hidden" name="cn" value="([0-9]*)" />', str(login_page_response.content))[0]
                 except Exception as e:
                         print('error getting tokens')
